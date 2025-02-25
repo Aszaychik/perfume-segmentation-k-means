@@ -1,2 +1,5 @@
 # requirements.txt
 ipykernel
+pandas
+sqlalchemy
+pymysql
