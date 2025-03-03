@@ -17,4 +17,4 @@ class Perfume(db.Model):
     def __repr__(self):
         return f'<Perfume {self.name}>'
     
-    sales = db.relationship('Sale', back_populates='perfume', lazy='dynamic')
+    sales = db.relationship('Sale', backref='perfume', lazy='dynamic')

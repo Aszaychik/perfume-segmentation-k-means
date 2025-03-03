@@ -13,12 +13,8 @@ class Sale(db.Model):
     perfume_id = db.Column(db.Integer, db.ForeignKey('perfumes.id'), nullable=False)
     profession_id = db.Column(db.Integer, db.ForeignKey('professions.id'), nullable=False)
     age = db.Column(db.Integer, nullable=False)
-    gender = db.Column(db.Integer, nullable=False)  # 0 = Female, 1 = Male
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
-    perfume = db.relationship('Perfume', backref='sales')
-    profession = db.relationship('Profession', backref='sales')
+    gender = db.Column(db.Integer, nullable=False)
+    createdAt = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, perfume_id, profession_id, age, gender):
         self.perfume_id = perfume_id
@@ -37,7 +33,7 @@ class Sale(db.Model):
             'profession': self.profession.serialize if self.profession else None,
             'age': self.age,
             'gender': 'Female' if self.gender == 0 else 'Male',
-            'created_at': self.created_at.isoformat()
+            'created_at': self.createdAt.isoformat()
         }
 
     @property
