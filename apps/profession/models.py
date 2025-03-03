@@ -16,3 +16,5 @@ class Profession(db.Model):
 
     def __repr__(self):
         return f'<Profession {self.name}>'
+    
+    sales = db.relationship('Sale', back_populates='profession', lazy='dynamic')
