@@ -27,7 +27,7 @@ SET time_zone = "+00:00";
 -- Struktur dari tabel `clusters`
 --
 
-CREATE TABLE `clusters` (
+CREATE TABLE IF NOT EXISTS `clusters` (
   `id` int(11) NOT NULL,
   `label` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -38,7 +38,7 @@ CREATE TABLE `clusters` (
 -- Struktur dari tabel `perfumes`
 --
 
-CREATE TABLE `perfumes` (
+CREATE TABLE IF NOT EXISTS `perfumes` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -60,7 +60,7 @@ INSERT INTO `perfumes` (`id`, `name`) VALUES
 -- Struktur dari tabel `professions`
 --
 
-CREATE TABLE `professions` (
+CREATE TABLE IF NOT EXISTS `professions` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -83,7 +83,7 @@ INSERT INTO `professions` (`id`, `name`) VALUES
 -- Struktur dari tabel `results`
 --
 
-CREATE TABLE `results` (
+CREATE TABLE IF NOT EXISTS `results` (
   `id` int(11) NOT NULL,
   `cluster_id` int(11) NOT NULL,
   `sales_id` int(11) NOT NULL
@@ -95,7 +95,7 @@ CREATE TABLE `results` (
 -- Struktur dari tabel `sales`
 --
 
-CREATE TABLE `sales` (
+CREATE TABLE IF NOT EXISTS `sales` (
   `id` int(11) NOT NULL,
   `perfume_id` int(11) NOT NULL,
   `profession_id` int(11) NOT NULL,
