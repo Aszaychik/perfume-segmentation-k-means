@@ -1,6 +1,6 @@
 'use strict';
 document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(function() {
+    setTimeout(function () {
         floatchart()
     }, 100);
     // [ campaign-scroll ] start
@@ -82,7 +82,7 @@ function floatchart() {
                 },
                 y: {
                     title: {
-                        formatter: function(seriesName) {
+                        formatter: function (seriesName) {
                             return ''
                         }
                     }
@@ -140,7 +140,7 @@ function floatchart() {
                 },
                 y: {
                     title: {
-                        formatter: function(seriesName) {
+                        formatter: function (seriesName) {
                             return ''
                         }
                     }
@@ -198,7 +198,7 @@ function floatchart() {
                 },
                 y: {
                     title: {
-                        formatter: function(seriesName) {
+                        formatter: function (seriesName) {
                             return ''
                         }
                     }
@@ -245,9 +245,9 @@ function floatchart() {
                 data: [45, 35, 60, 50, 85, 70]
             }],
             yaxis: {
-               min: 5,
-               max: 90,
-           },
+                min: 5,
+                max: 90,
+            },
             tooltip: {
                 fixed: {
                     enabled: false
@@ -257,7 +257,7 @@ function floatchart() {
                 },
                 y: {
                     title: {
-                        formatter: function(seriesName) {
+                        formatter: function (seriesName) {
                             return 'Ticket '
                         }
                     }
@@ -355,8 +355,8 @@ function floatchart() {
         var chart = new ApexCharts(document.querySelector("#customer-chart1"), options1);
         chart.render();
     })();
-    // [ customer-chart ] end
-    // [ unique-visitor-chart ] start
+    // [ sales-chart ] end
+    // [ monthly-sales-chart ] start
     (function () {
         var options = {
             chart: {
@@ -431,8 +431,8 @@ function floatchart() {
                 borderColor: '#cccccc3b',
             }
         }
-        var chart = new ApexCharts(document.querySelector("#unique-visitor-chart"), options);
+        var chart = new ApexCharts(document.querySelector("#monthly-sales-chart"), options);
         chart.render();
     })();
-    // [ unique-visitor-chart ] end
+    // [ monthly-sales-chart ] end
 }
