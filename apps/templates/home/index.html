@@ -14,21 +14,21 @@
             <div class="row">
                 <!-- order-card start -->
                 <div class="col-md-6 col-xl-3">
-                    <div class="card bg-c-blue order-card">
-                        <div class="card-body">
-                            <h6 class="text-white">Orders Received</h6>
-                            <h2 class="text-end text-white"><i class="feather icon-shopping-cart float-start"></i><span>486</span></h2>
-                            <p class="m-b-0">Completed Orders<span class="float-end">351</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
                     <div class="card bg-c-green order-card">
                         <div class="card-body">
                             <h6 class="text-white">Total Sales</h6>
                             <h2 class="text-end text-white"><i class="feather icon-tag float-start"></i><span>{{ total_sales }}</span>
                             </h2>
                             <p class="m-b-0">This Month<span class="float-end">{{ monthly_sales }}</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card bg-c-blue order-card">
+                        <div class="card-body">
+                            <h6 class="text-white">Most Sold Perfume</h6>
+                            <h2 class="text-end text-white"><i class="feather icon-shopping-cart float-start"></i><span>{{ most_sold_perfume.name }}</span></h2>
+                            <p class="m-b-0">Total Sales<span class="float-end">{{ total_sold_most_sold_perfume }}</span></p>
                         </div>
                     </div>
                 </div>
