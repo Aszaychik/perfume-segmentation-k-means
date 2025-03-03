@@ -330,17 +330,6 @@ INSERT INTO `sales` (`id`, `perfume_id`, `profession_id`, `age`, `gender`, `crea
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `users`
---
-
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `username` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
 -- Indexes for dumped tables
 --
 
@@ -379,13 +368,6 @@ ALTER TABLE `sales`
   ADD KEY `profession_id` (`profession_id`);
 
 --
--- Indeks untuk tabel `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
-
---
 -- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
@@ -418,12 +400,6 @@ ALTER TABLE `results`
 --
 ALTER TABLE `sales`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=218;
-
---
--- AUTO_INCREMENT untuk tabel `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
