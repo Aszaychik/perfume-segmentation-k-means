@@ -3,40 +3,28 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-import os
-from pathlib import Path
+import os, random, string
 
 class Config(object):
 
-    BASE_DIR = Path(__file__).resolve().parent
-    
-    USERS_ROLES  = { 'ADMIN'  :1 , 'USER'      : 2 }
-    USERS_STATUS = { 'ACTIVE' :1 , 'SUSPENDED' : 2 }
-    
-    # celery 
-    CELERY_BROKER_URL     = "redis://localhost:6379"
-    CELERY_RESULT_BACKEND = "redis://localhost:6379"
-    CELERY_HOSTMACHINE    = "celery@app-generator"
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
+    # Assets Management
+    ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
     # Set up the App SECRET_KEY
-    SECRET_KEY  = os.getenv('SECRET_KEY', 'S3cret_999')
+    SECRET_KEY  = os.getenv('SECRET_KEY', None)
+    if not SECRET_KEY:
+        SECRET_KEY = ''.join(random.choice( string.ascii_lowercase  ) for i in range( 32 ))    
 
-    # Social AUTH context
     SOCIAL_AUTH_GITHUB  = False
 
-    GITHUB_ID      = os.getenv('GITHUB_ID'    , None)
-    GITHUB_SECRET  = os.getenv('GITHUB_SECRET', None)
+    GITHUB_ID      = os.getenv('GITHUB_ID')
+    GITHUB_SECRET  = os.getenv('GITHUB_SECRET')
 
     # Enable/Disable Github Social Login    
     if GITHUB_ID and GITHUB_SECRET:
-         SOCIAL_AUTH_GITHUB  = True    
-
-    GOOGLE_ID      = os.getenv('GOOGLE_ID'    , None)
-    GOOGLE_SECRET  = os.getenv('GOOGLE_SECRET', None)
-
-    # Enable/Disable Google Social Login    
-    if GOOGLE_ID and GOOGLE_SECRET:
-         SOCIAL_AUTH_GOOGLE  = True    
+         SOCIAL_AUTH_GITHUB  = True
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -74,15 +62,8 @@ class Config(object):
     if USE_SQLITE:
 
         # This will create a file in <app> FOLDER
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
-
-    DYNAMIC_DATATB = {
-        "products": "apps.models.Product"
-    }
-
-    CDN_DOMAIN = os.getenv('CDN_DOMAIN')
-    CDN_HTTPS = os.getenv('CDN_HTTPS', True)
-
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')          
+             
 class ProductionConfig(Config):
     DEBUG = False
 
@@ -94,8 +75,13 @@ class ProductionConfig(Config):
 class DebugConfig(Config):
     DEBUG = True
 
+
 # Load all possible configurations
 config_dict = {
     'Production': ProductionConfig,
     'Debug'     : DebugConfig
+}
+
+API_GENERATOR = {
+    "books": "Book",
 }

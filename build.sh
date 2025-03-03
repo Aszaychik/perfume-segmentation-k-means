@@ -6,10 +6,7 @@ python -m pip install --upgrade pip
 
 pip install -r requirements.txt
 
-# DB Migration
-
-# Init migration folder
-# flask db init # to be executed only once
-
-flask db migrate # Generate migration SQL
-flask db upgrade # Apply changes
+flask db init
+flask db migrate
+flask db upgrade
+flask gen_api

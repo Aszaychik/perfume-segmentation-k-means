@@ -16,6 +16,7 @@ COPY env.sample .env
 
 COPY . .
 
+RUN flask db init
 RUN flask db migrate
 RUN flask db upgrade
 RUN flask gen_api
