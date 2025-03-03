@@ -2,7 +2,7 @@
 ipykernel
 pandas
 sqlalchemy
-pymysql
+mysqlclient
 python-dotenv
 scikit-learn
 matplotlib
