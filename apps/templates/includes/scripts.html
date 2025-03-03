@@ -3,4 +3,23 @@
     <script src="/static/assets/js/plugins/perfect-scrollbar.min.js"></script>
     <script src="/static/assets/js/plugins/bootstrap.min.js"></script>
     <script src="/static/assets/js/pcoded.js"></script>
-    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#data-table').DataTable({
+                "paging": true,
+                "lengthMenu": [10, 25, 50, 100],
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "order": [[5, 'desc']],  // Default sort by date descending
+                "columnDefs": [
+                    { "orderable": true },  // Disable sorting for # and Gender columns
+                    { "className": "dt-center", "targets": "_all" }  // Center align all columns
+                ]
+            });
+        });
+    </script>
