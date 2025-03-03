@@ -6,15 +6,20 @@ Copyright (c) 2019 - present AppSeed.us
 from apps.home import blueprint
 from flask import render_template, request
 from flask_login import login_required
+from datetime import datetime
 from jinja2 import TemplateNotFound
-from apps.perfume.models import Perfume
+from apps.sale.models import Sale
 
 
 @blueprint.route('/index')
 @login_required
 def index():
-    perfumes = Perfume.query.all()
-    return render_template('home/index.html', segment='index', perfumes=perfumes)
+    sales = Sale.query.all()
+    current_month = datetime.now().month
+
+    total_sales = len(sales)
+    monthly_sales = len([sale for sale in sales if sale.createdAt.month == current_month])
+    return render_template('home/index.html', segment='index', sales=sales, total_sales=total_sales, monthly_sales=monthly_sales)
 
 
 @blueprint.route('/<template>')
