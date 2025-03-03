@@ -62,3 +62,7 @@ venv.bak/
 # Environment variables
 .env
 .env.*
+
+# Migration folder
+.migrations/
+migrations/
