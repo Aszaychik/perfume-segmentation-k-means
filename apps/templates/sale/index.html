@@ -1,0 +1,80 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} UI Tables {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- [ Main Content ] start -->
+    <section class="pcoded-main-container">
+        <div class="pcoded-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h5 class="m-b-10">Data Sales</h5>
+                            </div>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                <li class="breadcrumb-item"><a href="#">Bootstrap Table</a></li>
+                                <li class="breadcrumb-item"><a href="#">Basic Tables</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ breadcrumb ] end -->
+            <!-- [ Main Content ] start -->
+            <!-- [ Hover-table ] start -->
+            <div class="card-body table-border-style">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped table-bordered">
+                        <thead class="thead">
+                            <tr>
+                                <th>#</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Profession</th>
+                                <th>Perfume</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ sale.age }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if sale.gender == 0 else 'danger' }}">
+                                        {{ 'Female' if sale.gender == 0 else 'Male' }}
+                                    </span>
+                                </td>
+                                <td>{{ sale.profession.name }}</td>
+                                <td>{{ sale.perfume.name }}</td>
+                                <td>{{ sale.createdAt.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    No sales records found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- [ Hover-table ] end -->
+            <!-- [ Main Content ] end -->
+        </div>
+    </section>
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
