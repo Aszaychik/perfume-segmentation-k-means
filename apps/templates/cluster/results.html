@@ -1,0 +1,83 @@
+{% extends "layouts/base.html" %} {% block title %} Cluster Results {% endblock
+%} {% block content %}
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-content">
+    <!-- [ breadcrumb ] start -->
+    <div class="page-header">
+      <div class="page-block">
+        <div class="row align-items-center">
+          <div class="col-md-12">
+            <div class="page-header-title">
+              <h5 class="m-b-10">Cluster Analysis Results</h5>
+            </div>
+            <ul class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="feather icon-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="#">Cluster Analysis</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ breadcrumb ] end -->
+
+    <!-- [ Main Content ] start -->
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>Segmentation Results</h5>
+            <div class="card-header-right">
+              <button class="btn btn-primary btn-sm" onclick="downloadReport()">
+                <i class="feather icon-download"></i> Download Report
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="mb-4">
+              <h6>Analysis Parameters:</h6>
+              <p class="mb-0">
+                Clusters: {{ results|length }} | Variables: {{ variables }}
+              </p>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Cluster Name</th>
+                    <th>Members</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cluster in results %}
+                  <tr>
+                    <td>{{ cluster.label }}</td>
+                    <td>{{ cluster.count }}</td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="3" class="text-center">No clusters found</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ Main Content ] end -->
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+{% endblock content %} {% block javascripts %}
+<script>
+  function downloadReport() {
+    // Add report download functionality
+    alert('Report download feature coming soon!');
+  }
+</script>
+{% endblock javascripts %}
