@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from apps.cluster import blueprint
-from flask import render_template, request
+from flask import render_template, request, redirect
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 
@@ -15,6 +15,19 @@ def index():
 
     return render_template('cluster/index.html')
 
+@blueprint.route('/cluster/process', methods=['POST'])
+@login_required
+def process_cluster():
+    try:
+        cluster_count = int(request.form.get('cluster_count'))
+        variables = request.form.getlist('variables')
+        
+        # Add your clustering logic here
+        # Example: perform_kmeans(cluster_count, variables)
+        
+        return redirect('/cluster/results')
+    except Exception as e:
+        return render_template('home/page-500.html'), 500
 
 @blueprint.route('/<template>')
 @login_required
