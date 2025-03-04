@@ -40,4 +40,4 @@ class Sale(db.Model):
     def gender_str(self):
         return 'Female' if self.gender == 0 else 'Male'
     
-    cluster = db.relationship('Result', backref='sale', lazy=True)
+    result = db.relationship('Result', backref='sale', lazy=True)
