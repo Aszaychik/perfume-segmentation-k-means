@@ -8,7 +8,6 @@
 {% endblock stylesheets %}
 
 {% block content %}
-
     <!-- [ Main Content ] start -->
     <section class="pcoded-main-container">
         <div class="pcoded-content">
@@ -30,6 +29,12 @@
                 </div>
             </div>
             <!-- [ breadcrumb ] end -->
+
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#salesFormModal">
+                    <i class="feather icon-plus"></i> Add New Sale
+                </button>
+            </div>
             
             <!-- [ Main Content ] start -->
             <div class="card">
@@ -77,9 +82,43 @@
     </section>
     <!-- [ Main Content ] end -->
 
+<!-- Modal Insert Sale -->
+{% include 'includes/modal_insert_sale.html' %}
+
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#data-table').DataTable();
+    
+        // Load relationship options
+        $.get('/sales/options', function(data) {
+            $('#perfume_id').append(data.perfumes);
+            $('#profession_id').append(data.professions);
+        });
+    
+        // Handle form submission
+        $('#salesForm').submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '/sales/create',
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#salesFormModal').modal('hide');
+                    location.reload(); // Refresh to show new data
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseJSON.error);
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock javascripts %}
+
