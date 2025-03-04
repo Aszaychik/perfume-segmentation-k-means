@@ -49,11 +49,12 @@
                                     <th>Profession</th>
                                     <th>Perfume</th>
                                     <th>Date</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for sale in sales %}
-                                <tr>
+                                <tr data-id="{{ sale.id }}">
                                     <td>{{ loop.index }}</td>
                                     <td>{{ sale.age }}</td>
                                     <td>
@@ -64,6 +65,11 @@
                                     <td>{{ sale.profession.name }}</td>
                                     <td>{{ sale.perfume.name }}</td>
                                     <td>{{ sale.createdAt.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm delete-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                            <i class="feather icon-trash"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% else %}
                                 <tr>
@@ -84,6 +90,8 @@
 
 <!-- Modal Insert Sale -->
 {% include 'includes/modal_insert_sale.html' %}
+
+{% include 'includes/modal_delete.html' %}
 
 {% endblock content %}
 
@@ -119,6 +127,35 @@
         });
     });
 </script>
+
+<script>
+    $(document).ready(function() {
+        let deleteId = null;
+        
+        $(document).on('click', '.delete-btn', function() {
+            deleteId = $(this).closest('tr').data('id');
+        });
+    
+        // Confirm delete handler
+        $('#confirmDelete').click(function() {
+            if (deleteId) {
+                $.ajax({
+                    url: '/sales/delete/' + deleteId,
+                    type: 'DELETE',
+                    success: function(response) {
+                        $('#deleteModal').modal('hide');
+                        // Remove the row from DataTable
+                        $('#data-table').DataTable().row($('tr[data-id="' + deleteId + '"]')).remove().draw();
+                        deleteId = null;
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + xhr.responseJSON.error);
+                    }
+                });
+            }
+        });
+    });
+    </script>
 
 {% endblock javascripts %}
 

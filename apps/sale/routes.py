@@ -53,6 +53,17 @@ def get_options():
         'professions': profession_options
     })
 
+@blueprint.route('/sales/delete/<int:sale_id>', methods=['DELETE'])
+@login_required
+def delete_sale(sale_id):
+    try:
+        sale = Sale.query.get_or_404(sale_id)
+        db.session.delete(sale)
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
+    
 
 @blueprint.route('/<template>')
 @login_required
