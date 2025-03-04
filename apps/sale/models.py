@@ -39,3 +39,5 @@ class Sale(db.Model):
     @property
     def gender_str(self):
         return 'Female' if self.gender == 0 else 'Male'
+    
+    cluster = db.relationship('Result', backref='sale', lazy=True)
