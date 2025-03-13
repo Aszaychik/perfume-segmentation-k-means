@@ -114,6 +114,10 @@ def cluster_results():
             # Otherwise, use: perfume = Perfume.query.get(sale.perfume_id)
             perfume = sale.perfume  
             perfume_name = perfume.name
+            perfume_names = list(perfume_counts.keys())
+            if perfume_name not in perfume_names:
+                perfume_names.append(perfume_name)
+            
             perfume_counts[perfume_name] = perfume_counts.get(perfume_name, 0) + 1
             total += 1
         cluster_data.append({
@@ -122,7 +126,7 @@ def cluster_results():
             'total': total,
             'perfume_counts': perfume_counts
         })
-    return render_template('cluster/results.html', cluster_data=cluster_data)
+    return render_template('cluster/results.html', cluster_data=cluster_data, perfume_names=perfume_names)
 
 @blueprint.route('/<template>')
 @login_required
