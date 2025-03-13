@@ -42,15 +42,12 @@
       <div class="col-md-6 col-xl-3">
         <div class="card bg-c-yellow order-card">
           <div class="card-body">
-            <h6 class="text-white">Highest Cluster</h6>
+            <h6 class="text-white">Total Cluster</h6>
             <h2 class="text-end text-white">
               <i class="feather icon-repeat float-start"></i>
-              <span>{{ highest_cluster.label }}</span>
+              <span>{{ cluster_data|length }}</span>
             </h2>
-            <p class="m-b-0">
-              Total Sales
-              <span class="float-end">{{ highest_cluster.total }}</span>
-            </p>
+            <p class="m-b-0">Cluster by<span class="float-end">Age</span></p>
           </div>
         </div>
       </div>
@@ -58,11 +55,16 @@
       <div class="col-md-6 col-xl-3">
         <div class="card bg-c-red order-card">
           <div class="card-body">
-            <h6 class="text-white">Total Profit</h6>
+            <h6 class="text-white">Highest Cluster</h6>
             <h2 class="text-end text-white">
-              <i class="feather icon-award float-start"></i><span>$9,562</span>
+              <i class="feather icon-award float-start"></i
+              ><span>{{ highest_cluster.label }}</span>
             </h2>
-            <p class="m-b-0">This Month<span class="float-end">$542</span></p>
+            <p class="m-b-0">
+              Total Sales<span class="float-end"
+                >{{ highest_cluster.total }}</span
+              >
+            </p>
           </div>
         </div>
       </div>
