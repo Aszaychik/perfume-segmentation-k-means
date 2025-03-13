@@ -63,6 +63,11 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Chart Section -->
+            <div class="mb-4">
+              <canvas id="clusterChart" width="400" height="200"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -72,10 +77,43 @@
 </div>
 <!-- [ Main Content ] end -->
 {% endblock content %} {% block javascripts %}
+<!-- Include Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   function downloadReport() {
     // Add report download functionality
     alert('Report download feature coming soon!');
   }
+
+  // Prepare chart data from the results passed from Flask
+  var resultsData = {{ results | tojson | safe }};
+  var labels = resultsData.map(function(item) { return item.label; });
+  var counts = resultsData.map(function(item) { return item.count; });
+
+  // Create a bar chart using Chart.js
+  var ctx = document.getElementById('clusterChart').getContext('2d');
+  var clusterChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Sales per Cluster',
+        data: counts,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
+    }
+  });
 </script>
 {% endblock javascripts %}
