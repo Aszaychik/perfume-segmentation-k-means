@@ -10,105 +10,56 @@ from apps.sale.models import Sale
 from flask import render_template, request, redirect, current_app
 from flask_login import login_required
 from jinja2 import TemplateNotFound
-import math
+import numpy as np
+from sklearn.cluster import KMeans
 
 def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
-    # 1. Get all sales data
-    sales = Sale.query.order_by(Sale.id).all()
-    if not sales:
-        raise ValueError("No sales data available for clustering")
+    # Fetch sales data based on selected variables
+    sales_data = Sale.query.with_entities(Sale.id, *[getattr(Sale, var) for var in variables]).all()
     
-    # 2. Prepare data points using selected variables
-    data_points = []
-    for sale in sales:
-        point = []
-        if 'perfume_id' in variables:
-            point.append(sale.perfume_id)
-        if 'profession' in variables:
-            point.append(sale.profession_id)
-        if 'age' in variables:
-            point.append(sale.age)
-        if 'gender' in variables:
-            point.append(sale.gender)
-        data_points.append((sale.id, point))
+    if not sales_data:
+        raise ValueError("No sales data available for clustering.")
     
-    # 3. Validate and get initial centroids (fixed number based on predefined IDs)
-    centroids = []
-    valid_centroid_ids = [cid for cid in centroid_ids if Sale.query.get(cid)]
+    # Convert sales data to a DataFrame
+    import pandas as pd
+    df_sales = pd.DataFrame(sales_data, columns=['id'] + variables)
+
+    # Extract initial centroids from the specified sales IDs
+    initial_centroids = df_sales[df_sales['id'].isin(centroid_ids)][variables].values
+
+    if len(initial_centroids) != len(centroid_ids):
+        raise ValueError("Some centroid IDs were not found in sales data.")
+
+    # Perform KMeans clustering
+    kmeans = KMeans(n_clusters=len(centroid_ids), init=initial_centroids, n_init=1, max_iter=iterations)
+    df_sales['cluster'] = kmeans.fit_predict(df_sales[variables])
+
+    # Store clusters in the database
+    db.session.query(Cluster).delete()  # Clear previous cluster data
+    db.session.query(Result).delete()   # Clear previous result data
+    db.session.commit()
+
+    # Save cluster data
+    clusters = []
+    for cluster_id in range(len(centroid_ids)):
+        # Get cluster age (mean of the age in that cluster)
+        cluster_label = round(df_sales[df_sales['cluster'] == cluster_id]['age'].mean())
+        new_cluster = Cluster(label=cluster_label)
+        db.session.add(new_cluster)
+        clusters.append(new_cluster)
+
+    db.session.commit()
+
+    # Save result data
+    for index, row in df_sales.iterrows():
+        sales_id = row['id']
+        cluster_id = row['cluster']
+        new_result = Result(cluster_id=clusters[cluster_id].id, sales_id=sales_id)
+        db.session.add(new_result)
+
+    db.session.commit()
     
-    if not valid_centroid_ids:
-        raise ValueError("No valid centroid IDs found in the system")
-    
-    for cid in valid_centroid_ids:
-        sale = Sale.query.get(cid)
-        point = []
-        if 'perfume_id' in variables:
-            point.append(sale.perfume_id)
-        if 'profession' in variables:
-            point.append(sale.profession_id)
-        if 'age' in variables:
-            point.append(sale.age)
-        if 'gender' in variables:
-            point.append(sale.gender)
-        centroids.append(point)
-    
-    k = len(centroids)  # Number of clusters determined by valid centroid IDs
-    
-    # 4. Custom K-Means implementation with iteration limit
-    dimension = len(data_points[0][1]) if data_points else 0
-    if dimension == 0:
-        raise ValueError("No variables selected for clustering")
-    
-    for _ in range(iterations):
-        # Assign points to clusters
-        clusters = [[] for _ in range(k)]
-        for pid, point in data_points:
-            distances = [math.sqrt(sum((p-c)**2 for p,c in zip(point, centroid))) 
-                        for centroid in centroids]
-            cluster_idx = distances.index(min(distances))
-            clusters[cluster_idx].append(pid)
-        
-        # Update centroids
-        new_centroids = []
-        for i in range(k):
-            if clusters[i]:
-                sum_point = [0]*dimension
-                for pid in clusters[i]:
-                    point = next(p[1] for p in data_points if p[0] == pid)
-                    for j in range(dimension):
-                        sum_point[j] += point[j]
-                mean_point = [v/len(clusters[i]) for v in sum_point]
-                new_centroids.append(mean_point)
-            else:
-                new_centroids.append(centroids[i])
-        
-        centroids = new_centroids
-    
-    # 5. Save results to database
-    try:
-        Cluster.query.delete()
-        Result.query.delete()
-        
-        for i in range(k):
-            cluster = Cluster(
-                label=f"Cluster {i+1}",
-            )
-            db.session.add(cluster)
-            db.session.flush()
-            
-            for sale_id in clusters[i]:
-                result = Result(
-                    cluster_id=cluster.id,
-                    sales_id=sale_id
-                )
-                db.session.add(result)
-        
-        db.session.commit()
-        return True
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error saving clusters: {str(e)}")
-        return False
+    return True
 
 @blueprint.route('/cluster')
 @login_required
@@ -140,6 +91,7 @@ def process_cluster():
     except Exception as e:
         current_app.logger.error(f"Cluster error: {str(e)}")
         return render_template('home/page-500.html'), 500
+
 
 @blueprint.route('/cluster/results')
 @login_required
