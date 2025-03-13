@@ -43,7 +43,7 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     clusters = []
     for cluster_id in range(len(centroid_ids)):
         # Get cluster age (mean of the age in that cluster)
-        cluster_label = round(df_sales[df_sales['cluster'] == cluster_id]['age'].mean())
+        cluster_label = f"Age {round(df_sales[df_sales['cluster'] == cluster_id]['age'].mean())}"
         new_cluster = Cluster(label=cluster_label)
         db.session.add(new_cluster)
         clusters.append(new_cluster)
