@@ -96,16 +96,33 @@ def process_cluster():
 @blueprint.route('/cluster/results')
 @login_required
 def cluster_results():
+    # Retrieve clusters from the database
     clusters = Cluster.query.all()
-    results = []
+    cluster_data = []
+    
+    # Build cluster data with perfume composition per cluster
     for cluster in clusters:
-        sales_count = Result.query.filter_by(cluster_id=cluster.id).count()
-        results.append({
+        # Get all Result entries for this cluster
+        result_entries = Result.query.filter_by(cluster_id=cluster.id).all()
+        sales_ids = [r.sales_id for r in result_entries]
+        # Query sales that belong to these results
+        sales = Sale.query.filter(Sale.id.in_(sales_ids)).all()
+        perfume_counts = {}
+        total = 0
+        for sale in sales:
+            # Assuming a relationship exists: sale.perfume returns the Perfume object.
+            # Otherwise, use: perfume = Perfume.query.get(sale.perfume_id)
+            perfume = sale.perfume  
+            perfume_name = perfume.name
+            perfume_counts[perfume_name] = perfume_counts.get(perfume_name, 0) + 1
+            total += 1
+        cluster_data.append({
             'id': cluster.id,
             'label': cluster.label,
-            'count': sales_count
+            'total': total,
+            'perfume_counts': perfume_counts
         })
-    return render_template('cluster/results.html', results=results)
+    return render_template('cluster/results.html', cluster_data=cluster_data)
 
 @blueprint.route('/<template>')
 @login_required

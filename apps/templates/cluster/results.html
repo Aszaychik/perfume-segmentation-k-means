@@ -38,35 +38,35 @@
           <div class="card-body">
             <div class="mb-4">
               <h6>Analysis Parameters:</h6>
-              <p class="mb-0">Clusters: {{ results|length }}</p>
+              <p class="mb-0">Total Clusters: {{ cluster_data|length }}</p>
+            </div>
+
+            <!-- Canvas for the Cluster Composition Map -->
+            <div class="mb-4">
+              <canvas id="clusterChart" width="800" height="400"></canvas>
             </div>
 
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th>Cluster Age</th>
+                    <th>Cluster Label</th>
                     <th>Total Sales</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for cluster in results %}
+                  {% for cluster in cluster_data %}
                   <tr>
                     <td>{{ cluster.label }}</td>
-                    <td>{{ cluster.count }}</td>
+                    <td>{{ cluster.total }}</td>
                   </tr>
                   {% else %}
                   <tr>
-                    <td colspan="3" class="text-center">No clusters found</td>
+                    <td colspan="2" class="text-center">No clusters found</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
-            </div>
-
-            <!-- Chart Section -->
-            <div class="mb-4">
-              <canvas id="clusterChart" width="400" height="200"></canvas>
             </div>
           </div>
         </div>
@@ -85,28 +85,70 @@
     alert('Report download feature coming soon!');
   }
 
-  // Prepare chart data from the results passed from Flask
-  var resultsData = {{ results | tojson | safe }};
-  var labels = resultsData.map(function(item) { return item.label; });
-  var counts = resultsData.map(function(item) { return item.count; });
+  // cluster_data is passed from Flask
+  var clusterData = {{ cluster_data | tojson | safe }};
+  // Define fixed perfume labels (and colors) based on your perfumes table
+  var perfumes = ["Bacarat", "D&G", "Paris Hilton", "Avril", "Makkah Madinah"];
+  var perfumeColors = {
+      "Bacarat": "rgba(255, 99, 132, 0.6)",
+      "D&G": "rgba(54, 162, 235, 0.6)",
+      "Paris Hilton": "rgba(255, 206, 86, 0.6)",
+      "Avril": "rgba(75, 192, 192, 0.6)",
+      "Makkah Madinah": "rgba(153, 102, 255, 0.6)"
+  };
+  var perfumeBorderColors = {
+      "Bacarat": "rgba(255, 99, 132, 1)",
+      "D&G": "rgba(54, 162, 235, 1)",
+      "Paris Hilton": "rgba(255, 206, 86, 1)",
+      "Avril": "rgba(75, 192, 192, 1)",
+      "Makkah Madinah": "rgba(153, 102, 255, 1)"
+  };
 
-  // Create a bar chart using Chart.js
+  // Build labels for clusters (using cluster label)
+  var clusterLabels = clusterData.map(function(cluster) { return cluster.label; });
+
+  // Prepare dataset for each perfume across clusters.
+  // For each perfume, we need an array (one element per cluster)
+  var datasets = [];
+  perfumes.forEach(function(perfume) {
+    var data = clusterData.map(function(cluster) {
+      return cluster.perfume_counts[perfume] || 0;
+    });
+    datasets.push({
+      label: perfume,
+      data: data,
+      backgroundColor: perfumeColors[perfume],
+      borderColor: perfumeBorderColors[perfume],
+      borderWidth: 1
+    });
+  });
+
+  // Create a stacked bar chart representing the composition of perfumes in each cluster
   var ctx = document.getElementById('clusterChart').getContext('2d');
   var clusterChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels,
-      datasets: [{
-        label: 'Total Sales per Cluster',
-        data: counts,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }]
+      labels: clusterLabels,
+      datasets: datasets
     },
     options: {
+      plugins: {
+        title: {
+          display: true,
+          text: 'Cluster Composition by Perfume'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      responsive: true,
       scales: {
+        x: {
+          stacked: true
+        },
         y: {
+          stacked: true,
           beginAtZero: true,
           ticks: {
             precision: 0
