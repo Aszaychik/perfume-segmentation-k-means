@@ -10,8 +10,11 @@ from apps.sale.models import Sale
 from flask import render_template, request, redirect, current_app
 from flask_login import login_required
 from jinja2 import TemplateNotFound
+import os
 import numpy as np
 from sklearn.cluster import KMeans
+import pandas as pd
+from sqlalchemy import create_engine
 
 def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     # Fetch sales data based on selected variables
@@ -60,6 +63,77 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     db.session.commit()
     
     return True
+
+def kmeans_result_table():
+
+    database_config = {
+        'engine': os.getenv('DB_ENGINE'),
+        'host': os.getenv('DB_HOST'),
+        'port': os.getenv('DB_PORT'),
+        'username': os.getenv('DB_USERNAME'),
+        'pass': os.getenv('DB_PASS'),
+        'database': os.getenv('DB_NAME')
+    }
+
+    connection_str = f"{database_config['engine']}://{database_config['username']}:{database_config['pass']}@{database_config['host']}:{database_config['port']}/{database_config['database']}"
+    engine = create_engine(connection_str)
+    
+    # Convert sales data to a DataFrame
+    query = """
+            SELECT
+                s.id,
+                s.age,
+                s.gender,
+                s.profession_id,
+                s.perfume_id,
+                p.name AS perfume_name,
+                pr.name AS profession_name
+            FROM sales AS s
+            LEFT JOIN perfumes AS p ON s.perfume_id = p.id
+            LEFT JOIN professions AS pr ON s.profession_id = pr.id
+            """
+    df_sales = pd.read_sql(query, engine)
+
+    # Select features from the DataFrame
+    X = df_sales[['age', 'gender', 'profession_id', 'perfume_id']].copy()
+
+    # Specify the sales IDs to use as initial centroids
+    initial_centroid_ids = [5, 10, 15, 20, 25]
+
+    # Extract the rows with these sales IDs to obtain the initial centroids
+    # Make sure that the 'id' column corresponds to your sales id
+    initial_centroids = df_sales[df_sales['id'].isin(initial_centroid_ids)][['age', 'gender', 'profession_id', 'perfume_id']].values
+
+    # Initialize KMeans with the predefined centroids
+    k = 5  # Total number of clusters
+    kmeans = KMeans(n_clusters=k, init=initial_centroids, n_init=1)
+
+    # Train the KMeans model on the selected features
+    kmeans.fit(X)
+
+    # Retrieve the cluster labels and add them to the DataFrame
+    labels = kmeans.labels_
+    df_sales['cluster'] = labels
+
+    # Display the first few cluster assignments
+    df_sales['cluster'].head()
+
+    # Get cluster labels
+    df_sales_with_labels = df_sales.groupby('cluster').agg({
+        'age': 'mean',
+        'perfume_id': 'mean',
+        'gender': 'mean',
+        'profession_id': 'mean',
+    })
+    
+    # Get luster labels rounded to the nearest integer
+    df_sales_with_labels_rounded = df_sales_with_labels.round(0).astype(int)
+
+    df_sales_with_labels_rounded['perfume_name'] = df_sales.groupby('cluster')['perfume_name'].agg(lambda x: x.mode()[0])
+    df_sales_with_labels_rounded['profession_name'] = df_sales.groupby('cluster')['profession_name'].agg(lambda x: x.mode()[0])
+
+    # Return 2 data, one with rounded values and one with original values
+    return df_sales_with_labels_rounded.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist(), df_sales_with_labels.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist()
 
 @blueprint.route('/cluster')
 @login_required
@@ -127,6 +201,16 @@ def cluster_results():
             'perfume_counts': perfume_counts
         })
     return render_template('cluster/results.html', cluster_data=cluster_data, perfume_names=perfume_names)
+
+@blueprint.route('/cluster/table')
+@login_required
+def cluster_table():
+    try:
+        results_rounded, results = kmeans_result_table()
+        return render_template('cluster/table.html', results_rounded=results_rounded, results=results)
+    except Exception as e:
+        current_app.logger.error(f"Error generating cluster table: {str(e)}")
+        return render_template('home/page-500.html'), 500
 
 @blueprint.route('/<template>')
 @login_required
