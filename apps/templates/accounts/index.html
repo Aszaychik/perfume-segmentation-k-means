@@ -1,0 +1,88 @@
+{% extends "layouts/base.html" %} {% block title %} User Management {% endblock
+%} {% block content %}
+<!-- [ Main Content ] start -->
+<section class="pcoded-main-container">
+  <div class="pcoded-content">
+    <!-- [ breadcrumb ] start -->
+    <div class="page-header">
+      <div class="page-block">
+        <div class="row align-items-center">
+          <div class="col-md-12">
+            <div class="page-header-title">
+              <h5 class="m-b-10">User Management</h5>
+            </div>
+            <ul class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="/"><i class="feather icon-home"></i></a>
+              </li>
+              <li class="breadcrumb-item"><a href="#">User Management</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ breadcrumb ] end -->
+
+    <!-- [ Main Content ] start -->
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table
+            id="user-table"
+            class="table table-hover table-striped"
+            style="width: 100%"
+          >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr data-id="{{ user.id }}">
+                <td>{{ loop.index }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'success' if user.role == 'admin' else 'primary' }}"
+                  >
+                    {{ user.role|upper }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-info btn-sm edit-btn">
+                    <i class="feather icon-edit"></i>
+                  </button>
+                  <button class="btn btn-danger btn-sm delete-btn">
+                    <i class="feather icon-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">
+                  No users found
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- [ Main Content ] end -->
+  </div>
+</section>
+<!-- [ Main Content ] end -->
+{% endblock %} {% block javascripts %}
+<script>
+  $(document).ready(function () {
+    $('#user-table').DataTable();
+  });
+</script>
+{% endblock %}

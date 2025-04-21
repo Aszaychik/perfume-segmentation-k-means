@@ -17,6 +17,7 @@ class Users(db.Model, UserMixin):
     username = db.Column(db.String(64), unique=True)
     email = db.Column(db.String(64), unique=True)
     password = db.Column(db.LargeBinary)
+    role = db.Column(db.String(64), default='karyawan')
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -34,6 +35,7 @@ class Users(db.Model, UserMixin):
 
     def __repr__(self):
         return str(self.username)
+    
 
 
 @login_manager.user_loader

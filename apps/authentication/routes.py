@@ -100,6 +100,17 @@ def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
 
+# User Management
+@blueprint.route('/accounts')
+def accounts():
+    # Check if user is admin
+    if current_user.role != 'admin':
+        return render_template('home/page-403.html'), 403
+    
+    # Get all users from database
+    users = Users.query.all()
+    return render_template('accounts/index.html', users=users)
+
 
 # Errors
 
