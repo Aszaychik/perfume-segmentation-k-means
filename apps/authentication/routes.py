@@ -7,7 +7,8 @@ from flask import render_template, redirect, request, url_for
 from flask_login import (
     current_user,
     login_user,
-    logout_user
+    logout_user,
+    login_required
 )
 
 from apps import db, login_manager
@@ -102,6 +103,7 @@ def logout():
 
 # User Management
 @blueprint.route('/accounts')
+@login_required
 def accounts():
     # Check if user is admin
     if current_user.role != 'admin':
@@ -111,6 +113,28 @@ def accounts():
     users = Users.query.all()
     return render_template('accounts/index.html', users=users)
 
+@blueprint.route('/accounts/create' , methods=['POST'])
+@login_required
+def create():
+    try:
+        # Check if user is admin
+        if current_user.role != 'admin':
+            return render_template('home/page-403.html'), 403
+
+        # Create a new user
+        user = Users(
+            username=request.form['username'],
+            email=request.form['email'],
+            password=request.form['password'],
+            role=request.form['role']
+        )
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('authentication_blueprint.accounts'))
+    except Exception as e:
+        return render_template('home/page-500.html', error=str(e)), 500
+
+    
 
 # Errors
 

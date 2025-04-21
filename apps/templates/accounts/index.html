@@ -23,12 +23,23 @@
     </div>
     <!-- [ breadcrumb ] end -->
 
+    <div class="mb-3">
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#userFormModal"
+      >
+        <i class="feather icon-plus"></i> Add New User
+      </button>
+    </div>
+
     <!-- [ Main Content ] start -->
     <div class="card">
       <div class="card-body">
         <div class="table-responsive">
           <table
-            id="user-table"
+            id="data-table"
             class="table table-hover table-striped"
             style="width: 100%"
           >
@@ -79,10 +90,30 @@
   </div>
 </section>
 <!-- [ Main Content ] end -->
-{% endblock %} {% block javascripts %}
+
+{% include 'includes/modal_insert_user.html' %} {% endblock %} {% block
+javascripts %}
 <script>
   $(document).ready(function () {
-    $('#user-table').DataTable();
+    // Initialize DataTable
+    $('#data-table').DataTable();
+
+    // Handle form submission
+    $('#userForm').submit(function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'POST',
+        url: '/accounts/create',
+        data: $(this).serialize(),
+        success: function (response) {
+          $('#userFormModal').modal('hide');
+          location.reload(); // Refresh to show new data
+        },
+        error: function (xhr) {
+          alert('Error: ' + xhr.responseJSON.error);
+        },
+      });
+    });
   });
 </script>
-{% endblock %}
+{% endblock javascripts %}
