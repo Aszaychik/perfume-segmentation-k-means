@@ -69,7 +69,11 @@
                   <button class="btn btn-info btn-sm edit-btn">
                     <i class="feather icon-edit"></i>
                   </button>
-                  <button class="btn btn-danger btn-sm delete-btn">
+                  <button
+                    class="btn btn-danger btn-sm delete-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteModal"
+                  >
                     <i class="feather icon-trash"></i>
                   </button>
                 </td>
@@ -91,8 +95,8 @@
 </section>
 <!-- [ Main Content ] end -->
 
-{% include 'includes/modal_insert_user.html' %} {% endblock %} {% block
-javascripts %}
+{% include 'includes/modal_insert_user.html' %} {% include
+'includes/modal_delete.html' %} {% endblock %} {% block javascripts %}
 <script>
   $(document).ready(function () {
     // Initialize DataTable
@@ -113,6 +117,33 @@ javascripts %}
           alert('Error: ' + xhr.responseJSON.error);
         },
       });
+    });
+  });
+</script>
+
+<script>
+  $(document).ready(function () {
+    let deleteId = null;
+
+    $(document).on('click', '.delete-btn', function () {
+      deleteId = $(this).closest('tr').data('id');
+    });
+
+    // Confirm delete handler
+    $('#confirmDelete').click(function () {
+      if (deleteId) {
+        $.ajax({
+          url: '/accounts/delete/' + deleteId,
+          type: 'POST',
+          success: function (response) {
+            $('#deleteModal').modal('hide');
+            location.reload();
+          },
+          error: function (xhr) {
+            alert('Error: ' + xhr.responseJSON.error);
+          },
+        });
+      }
     });
   });
 </script>

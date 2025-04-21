@@ -3,7 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import render_template, redirect, request, url_for
+from flask import render_template, redirect, request, url_for, jsonify
 from flask_login import (
     current_user,
     login_user,
@@ -95,7 +95,6 @@ def register():
     else:
         return render_template('accounts/register.html', form=create_account_form)
 
-
 @blueprint.route('/logout')
 def logout():
     logout_user()
@@ -134,7 +133,21 @@ def create():
     except Exception as e:
         return render_template('home/page-500.html', error=str(e)), 500
 
-    
+
+@blueprint.route('/accounts/delete/<int:user_id>', methods=['POST'])
+@login_required
+def delete(user_id):
+    try:
+        # Check if user is admin
+        if current_user.role != 'admin':
+            return render_template('home/page-403.html'), 403
+        # Delete user
+        user = Users.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(error=str(e)), 400
 
 # Errors
 
