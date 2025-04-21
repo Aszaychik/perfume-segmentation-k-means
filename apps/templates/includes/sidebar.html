@@ -12,20 +12,20 @@
             ><span class="pcoded-mtext">Dashboard</span></a
           >
         </li>
+        {% if current_user.role == 'admin' %}
         <li class="nav-item">
           <a href="/accounts" class="nav-link"
             ><span class="pcoded-micon"><i class="feather icon-users"></i></span
             ><span class="pcoded-mtext">Users</span></a
           >
         </li>
-        {% if current_user.role == 'admin' %}
+        {% endif %}
         <li class="nav-item">
           <a href="/sales" class="nav-link"
             ><span class="pcoded-micon"><i class="feather icon-tag"></i></span
             ><span class="pcoded-mtext">Sales Data</span></a
           >
         </li>
-        {% endif %}
         <li class="nav-item">
           <a href="/cluster" class="nav-link"
             ><span class="pcoded-micon"
