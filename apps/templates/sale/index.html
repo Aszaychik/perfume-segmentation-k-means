@@ -26,6 +26,7 @@
     </div>
     <!-- [ breadcrumb ] end -->
 
+    {% if current_user.role == 'karyawan' %}
     <div class="mb-3">
       <button
         type="button"
@@ -36,6 +37,7 @@
         <i class="feather icon-plus"></i> Add New Sale
       </button>
     </div>
+    {% endif %}
 
     <!-- [ Main Content ] start -->
     <div class="card">
