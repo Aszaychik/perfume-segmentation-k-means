@@ -38,8 +38,8 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     df_sales['cluster'] = kmeans.fit_predict(df_sales[variables])
 
     # Store clusters in the database
-    db.session.query(Cluster).delete()  # Clear previous cluster data
     db.session.query(Result).delete()   # Clear previous result data
+    db.session.query(Cluster).delete()  # Clear previous cluster data
     db.session.commit()
 
     # Save cluster data
