@@ -67,6 +67,45 @@
       </div>
     </div>
 
+    <!-- [ Result Rounded ] -->
+    <h5>Rounded</h5>
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table id="data-table" class="table" style="width: 100%">
+            <thead>
+              <tr class="text-center">
+                <th>#</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Profession</th>
+                <th>Perfume</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in results_rounded %}
+              <tr class="text-center">
+                <td>{{ loop.index }}</td>
+                <td>{{ result.age }}</td>
+                <td>
+                  <span> {{ result.gender }} </span>
+                </td>
+                <td>{{ result.profession_id }}</td>
+                <td>{{ result.perfume_id }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-muted">
+                  No Results records found
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- [ Result Rounded Replace With Name ] -->
     <h5>Rounded with Name</h5>
     <div class="card">
@@ -83,7 +122,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for result in results_rounded %}
+              {% for result in results_rounded_name %}
               <tr class="text-center">
                 <td>{{ loop.index }}</td>
                 <td>{{ result.age }}</td>
@@ -109,6 +148,7 @@
         </div>
       </div>
     </div>
+
     <!-- [ Main Content ] end -->
   </div>
 </section>

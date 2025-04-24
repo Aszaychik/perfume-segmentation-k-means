@@ -129,11 +129,12 @@ def kmeans_result_table():
     # Get luster labels rounded to the nearest integer
     df_sales_with_labels_rounded = df_sales_with_labels.round(0).astype(int)
 
-    df_sales_with_labels_rounded['perfume_name'] = df_sales.groupby('cluster')['perfume_name'].agg(lambda x: x.mode()[0])
-    df_sales_with_labels_rounded['profession_name'] = df_sales.groupby('cluster')['profession_name'].agg(lambda x: x.mode()[0])
+    df_sales_with_labels_rounded_name = df_sales_with_labels_rounded.copy()
 
-    # Return 2 data, one with rounded values and one with original values
-    return df_sales_with_labels_rounded.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist(), df_sales_with_labels.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist()
+    df_sales_with_labels_rounded_name['perfume_name'] = df_sales.groupby('cluster')['perfume_name'].agg(lambda x: x.mode()[0])
+    df_sales_with_labels_rounded_name['profession_name'] = df_sales.groupby('cluster')['profession_name'].agg(lambda x: x.mode()[0])
+
+    return df_sales_with_labels.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist(), df_sales_with_labels_rounded.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist(), df_sales_with_labels_rounded_name.reset_index().apply(lambda row: row.to_dict(), axis=1).tolist()
 
 @blueprint.route('/cluster')
 @login_required
@@ -206,8 +207,8 @@ def cluster_results():
 @login_required
 def cluster_table():
     try:
-        results_rounded, results = kmeans_result_table()
-        return render_template('cluster/table.html', results_rounded=results_rounded, results=results)
+        results, results_rounded, results_rounded_name = kmeans_result_table()
+        return render_template('cluster/table.html', results=results, results_rounded=results_rounded, results_rounded_name=results_rounded_name)
     except Exception as e:
         current_app.logger.error(f"Error generating cluster table: {str(e)}")
         return render_template('home/page-500.html'), 500
