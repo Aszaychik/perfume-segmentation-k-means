@@ -149,6 +149,38 @@ def delete(user_id):
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+@blueprint.route('/accounts/update/<int:user_id>', methods=['POST'])
+@login_required
+def update(user_id):
+    try:
+        # Check if user is admin
+        if current_user.role != 'admin':
+            return render_template('home/page-403.html'), 403
+
+        user = Users.query.get_or_404(user_id)
+        
+        # Check username uniqueness
+        if Users.query.filter(Users.username == request.form['username'], Users.id != user_id).first():
+            return jsonify(error='Username already exists'), 400
+            
+        # Check email uniqueness
+        if Users.query.filter(Users.email == request.form['email'], Users.id != user_id).first():
+            return jsonify(error='Email already exists'), 400
+
+        # Update user
+        user.username = request.form['username']
+        user.email = request.form['email']
+        user.role = request.form['role']
+        
+        # Update password if provided
+        if request.form.get('password'):
+            user.password = request.form['password']
+            
+        db.session.commit()
+        return redirect(url_for('authentication_blueprint.accounts'))
+    except Exception as e:
+        return render_template('home/page-500.html', error=str(e)), 500
+
 # Errors
 
 @login_manager.unauthorized_handler

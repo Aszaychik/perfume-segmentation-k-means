@@ -96,7 +96,8 @@
 <!-- [ Main Content ] end -->
 
 {% include 'includes/modal_insert_user.html' %} {% include
-'includes/modal_delete.html' %} {% endblock %} {% block javascripts %}
+'includes/modal_delete.html' %} {% include 'includes/modal_edit_user.html' %} {%
+endblock %} {% block javascripts %}
 <script>
   $(document).ready(function () {
     // Initialize DataTable
@@ -147,4 +148,29 @@
     });
   });
 </script>
+
+<script>
+  $(document).ready(function () {
+    let editUserId = null;
+
+    // Edit button handler
+    $(document).on('click', '.edit-btn', function () {
+      const row = $(this).closest('tr');
+      const userId = row.data('id');
+
+      // Set form action and user ID
+      $('#editUserForm').attr('action', `/accounts/update/${userId}`);
+      $('#editUserId').val(userId);
+
+      // Get current values from table
+      $('#editUsername').val(row.find('td:eq(1)').text());
+      $('#editEmail').val(row.find('td:eq(2)').text());
+      $('#editRole').val(row.find('.badge').text().trim().toLowerCase());
+      $('#editPassword').val('');
+
+      $('#editUserModal').modal('show');
+    });
+  });
+</script>
+
 {% endblock javascripts %}
