@@ -10,9 +10,17 @@ class Cluster(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     label = db.Column(db.String(80), unique=True, nullable=False)
+    age = db.Column(db.Float, nullable=False)
+    perfume_id = db.Column(db.Float, nullable=False)
+    gender = db.Column(db.Float, nullable=False)
+    profession_id = db.Column(db.Float, nullable=False)
 
-    def __init__(self, label):
+    def __init__(self, label, age, perfume_id, gender, profession_id):
         self.label = label
+        self.age = age
+        self.perfume_id = perfume_id
+        self.gender = gender
+        self.profession_id = profession_id
 
     def __repr__(self):
         return f'<Cluster {self.label}>'
