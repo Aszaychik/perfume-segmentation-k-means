@@ -42,15 +42,31 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     db.session.query(Cluster).delete()  # Clear previous cluster data
     db.session.commit()
 
-    # Save cluster data
+    # Save cluster data with all characteristics
     clusters = []
     for cluster_id in range(len(centroid_ids)):
-        # Get cluster age (mean of the age in that cluster)
-        cluster_label = f"Age {round(df_sales[df_sales['cluster'] == cluster_id]['age'].mean())}"
-        new_cluster = Cluster(label=cluster_label)
+        cluster_members = df_sales[df_sales['cluster'] == cluster_id]
+        
+        if cluster_members.empty:
+            continue  # Skip empty clusters
+
+        # Calculate cluster characteristics
+        age_mean = cluster_members['age'].mean()
+        perfume_mode = cluster_members['perfume_id'].mode()[0]
+        gender_mode = cluster_members['gender'].mode()[0]
+        profession_mode = cluster_members['profession_id'].mode()[0]
+
+        new_cluster = Cluster(
+            label=f"Age {round(age_mean)}",
+            age=float(age_mean),
+            perfume_id=float(perfume_mode),
+            gender=float(gender_mode),
+            profession_id=float(profession_mode)
+        )
+        
         db.session.add(new_cluster)
         clusters.append(new_cluster)
-
+    
     db.session.commit()
 
     # Save result data
@@ -149,6 +165,13 @@ def process_cluster():
     try:
         iterations = int(request.form.get('cluster_count'))
         variables = request.form.getlist('variables')
+
+        # Enforce required variables
+        required_vars = {'perfume_id', 'age', 'gender', 'profession_id'}
+        missing_vars = required_vars - set(variables)
+        
+        if missing_vars:
+            raise ValueError(f"Missing required variables: {', '.join(missing_vars)}")
         
         if not variables:
             raise ValueError("No variables selected")
