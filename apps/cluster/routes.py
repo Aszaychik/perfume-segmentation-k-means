@@ -9,7 +9,7 @@ from apps import db
 from apps.sale.models import Sale
 from apps.perfume.models import Perfume
 from apps.profession.models import Profession
-from flask import render_template, request, redirect, current_app
+from flask import render_template, request, redirect, current_app, url_for, session
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 import os
@@ -56,59 +56,59 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
 
     # Custom K-Means algorithm
     for _ in range(iterations):
-        # Calculate |Σ(x_i - c_i)| distances
         raw_diffs = (X[:, None, :] - centroids[None, :, :]).sum(axis=2)
         dists = np.abs(raw_diffs)
-        
-        # Assign to nearest cluster (0-indexed)
         labels = np.argmin(dists, axis=1)
         df_sales['cluster'] = labels
         
-        # Update centroids (handle empty clusters)
         new_centroids = np.zeros_like(centroids)
         for j in range(len(centroid_ids)):
             cluster_data = df_sales[df_sales['cluster'] == j]
             if not cluster_data.empty:
                 new_centroids[j] = cluster_data[variables].mean().values
             else:
-                new_centroids[j] = centroids[j]  # Keep previous centroid
-        
+                new_centroids[j] = centroids[j]
         centroids = new_centroids
 
-    # Create cluster summary dataframes
-    # Full precision numerical means
-    df_sales_with_labels = df_sales.groupby('cluster').agg({
-        'age': 'mean',
-        'perfume_id': 'mean',
-        'gender': 'mean',
-        'profession_id': 'mean',
-    }).reset_index()
-    
-    # Rounded numerical means
-    df_sales_with_labels_rounded = df_sales_with_labels.copy()
-    for col in ['age', 'perfume_id', 'gender', 'profession_id']:
-        df_sales_with_labels_rounded[col] = df_sales_with_labels_rounded[col].round(0).astype(int)
-    
-    # Rounded with categorical modes
-    df_sales_with_labels_rounded_name = df_sales_with_labels_rounded.copy()
-    
-    # Get mode for perfume and profession names
-    name_modes = df_sales.groupby('cluster').agg({
-        'perfume_name': lambda x: x.mode()[0] if not x.empty else None,
-        'profession_name': lambda x: x.mode()[0] if not x.empty else None
-    }).reset_index()
-    
-    # Merge name modes with numerical data
-    df_sales_with_labels_rounded_name = df_sales_with_labels_rounded_name.merge(
-        name_modes, on='cluster', how='left'
-    )
+    # Store clusters in the database
+    db.session.query(Result).delete()
+    db.session.query(Cluster).delete()
+    db.session.commit()
 
-    # Convert to list of dictionaries for response
-    full_precision = df_sales_with_labels.apply(lambda row: row.to_dict(), axis=1).tolist()
-    rounded = df_sales_with_labels_rounded.apply(lambda row: row.to_dict(), axis=1).tolist()
-    rounded_with_names = df_sales_with_labels_rounded_name.apply(lambda row: row.to_dict(), axis=1).tolist()
+    # Create Cluster objects with actual values (not rounded)
+    clusters = []
+    for cluster_id in range(len(centroid_ids)):
+        cluster_members = df_sales[df_sales['cluster'] == cluster_id]
+        
+        if cluster_members.empty:
+            continue
 
-    return full_precision, rounded, rounded_with_names
+        # Calculate characteristics
+        age_mean = cluster_members['age'].mean()
+        perfume_mode = cluster_members['perfume_id'].mode()[0]
+        gender_mode = cluster_members['gender'].mode()[0]
+        profession_mode = cluster_members['profession_id'].mode()[0]
+
+        new_cluster = Cluster(
+            label=f"Age {round(age_mean)}",
+            age=float(age_mean),
+            perfume_id=float(perfume_mode),
+            gender=float(gender_mode),
+            profession_id=float(profession_mode)
+        )
+        db.session.add(new_cluster)
+        clusters.append(new_cluster)
+    
+    db.session.commit()
+
+    # Save results
+    for _, row in df_sales.iterrows():
+        cluster_id = clusters[row['cluster']].id
+        new_result = Result(cluster_id=cluster_id, sales_id=row['id'])
+        db.session.add(new_result)
+    
+    db.session.commit()
+    return True
 
 @blueprint.route('/cluster')
 @login_required
@@ -137,48 +137,87 @@ def process_cluster():
         if iterations < 1 or iterations > 100:
             raise ValueError("Iterations must be between 1-100")
         
-        results, results_rounded, results_rounded_name = perform_kmeans(iterations, variables)
-        return render_template('cluster/table.html', results=results, results_rounded=results_rounded, results_rounded_name=results_rounded_name)
+        success = perform_kmeans(iterations, variables)
+        
+        if success:
+            return redirect(url_for('cluster_blueprint.cluster_table'))
+        else:
+            return render_template('home/page-500.html'), 500
             
     except Exception as e:
         current_app.logger.error(f"Cluster error: {str(e)}")
         return render_template('home/page-500.html'), 500
 
-
-@blueprint.route('/cluster/results')
+@blueprint.route('/cluster/table')
 @login_required
-def cluster_results():
-    # Retrieve clusters from the database
-    clusters = Cluster.query.all()
-    cluster_data = []
-    
-    # Build cluster data with perfume composition per cluster
-    for cluster in clusters:
-        # Get all Result entries for this cluster
-        result_entries = Result.query.filter_by(cluster_id=cluster.id).all()
-        sales_ids = [r.sales_id for r in result_entries]
-        # Query sales that belong to these results
-        sales = Sale.query.filter(Sale.id.in_(sales_ids)).all()
-        perfume_counts = {}
-        total = 0
-        for sale in sales:
-            # Assuming a relationship exists: sale.perfume returns the Perfume object.
-            # Otherwise, use: perfume = Perfume.query.get(sale.perfume_id)
-            perfume = sale.perfume  
-            perfume_name = perfume.name
-            perfume_names = list(perfume_counts.keys())
-            if perfume_name not in perfume_names:
-                perfume_names.append(perfume_name)
+def cluster_table():
+    try:
+        # Get all clusters
+        clusters = Cluster.query.all()
+        
+        # Prepare full precision results
+        results = []
+        for cluster in clusters:
+            results.append({
+                'cluster': cluster.id,
+                'age': cluster.age,
+                'perfume_id': cluster.perfume_id,
+                'gender': cluster.gender,
+                'profession_id': cluster.profession_id
+            })
+        
+        # Prepare rounded results
+        results_rounded = []
+        for cluster in clusters:
+            results_rounded.append({
+                'cluster': cluster.id,
+                'age': round(cluster.age),
+                'perfume_id': round(cluster.perfume_id),
+                'gender': round(cluster.gender),
+                'profession_id': round(cluster.profession_id)
+            })
+        
+        # Prepare rounded results with names
+        results_rounded_name = []
+        for cluster in clusters:
+            # Get most common perfume and profession names for this cluster
+            perfume_name = db.session.query(
+                Perfume.name
+            ).join(Sale, Sale.perfume_id == Perfume.id
+            ).join(Result, Result.sales_id == Sale.id
+            ).filter(Result.cluster_id == cluster.id
+            ).group_by(Perfume.name
+            ).order_by(db.func.count().desc()
+            ).first()
             
-            perfume_counts[perfume_name] = perfume_counts.get(perfume_name, 0) + 1
-            total += 1
-        cluster_data.append({
-            'id': cluster.id,
-            'label': cluster.label,
-            'total': total,
-            'perfume_counts': perfume_counts
-        })
-    return render_template('cluster/results.html', cluster_data=cluster_data, perfume_names=perfume_names)
+            profession_name = db.session.query(
+                Profession.name
+            ).join(Sale, Sale.profession_id == Profession.id
+            ).join(Result, Result.sales_id == Sale.id
+            ).filter(Result.cluster_id == cluster.id
+            ).group_by(Profession.name
+            ).order_by(db.func.count().desc()
+            ).first()
+            
+            results_rounded_name.append({
+                'cluster': cluster.id,
+                'age': round(cluster.age),
+                'perfume_id': round(cluster.perfume_id),
+                'gender': round(cluster.gender),
+                'profession_id': round(cluster.profession_id),
+                'perfume_name': perfume_name[0] if perfume_name else "N/A",
+                'profession_name': profession_name[0] if profession_name else "N/A"
+            })
+        
+        return render_template('cluster/table.html', 
+                              results=results,
+                              results_rounded=results_rounded,
+                              results_rounded_name=results_rounded_name)
+            
+    except Exception as e:
+        current_app.logger.error(f"Cluster table error: {str(e)}")
+        return render_template('home/page-500.html'), 500
+
 
 @blueprint.route('/<template>')
 @login_required
