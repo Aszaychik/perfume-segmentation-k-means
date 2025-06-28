@@ -1,47 +1,85 @@
 <!-- templates/includes/modal_insert_sale.html -->
-<div class="modal fade" id="salesFormModal" tabindex="-1" role="dialog" aria-labelledby="salesFormModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="salesFormModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="salesFormModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title" id="salesFormModalLabel">Add New Sale Record</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-              </button>
-          </div>
-          <form id="salesForm">
-              <div class="modal-body">
-                  <div class="form-group">
-                      <label for="perfume_id">Perfume</label>
-                      <select class="form-control" id="perfume_id" name="perfume_id" required>
-                          <option value="">Select Perfume</option>
-                          <!-- Options will be populated via JavaScript -->
-                      </select>
-                  </div>
-                  <div class="form-group">
-                      <label for="profession_id">Profession</label>
-                      <select class="form-control" id="profession_id" name="profession_id" required>
-                          <option value="">Select Profession</option>
-                          <!-- Options will be populated via JavaScript -->
-                      </select>
-                  </div>
-                  <div class="form-group">
-                      <label for="age">Age</label>
-                      <input type="number" class="form-control" id="age" name="age" min="1" max="100" required>
-                  </div>
-                  <div class="form-group">
-                      <label for="gender">Gender</label>
-                      <select class="form-control" id="gender" name="gender" required>
-                          <option value="">Select Gender</option>
-                          <option value="0">Female</option>
-                          <option value="1">Male</option>
-                      </select>
-                  </div>
-              </div>
-              <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                  <button type="submit" class="btn btn-primary">Save changes</button>
-              </div>
-          </form>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="salesFormModalLabel">
+          Add New Sale Record
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
+      <form id="salesForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="perfume_id">Perfume</label>
+            <select
+              class="form-control"
+              id="perfume_id"
+              name="perfume_id"
+              required
+            >
+              <option value="">Select Perfume</option>
+              <!-- Options will be populated via JavaScript -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="profession_id">Profession</label>
+            <select
+              class="form-control"
+              id="profession_id"
+              name="profession_id"
+              required
+            >
+              <option value="">Select Profession</option>
+              <!-- Options will be populated via JavaScript -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="age">Age</label>
+            <input
+              type="number"
+              class="form-control"
+              id="age"
+              name="age"
+              min="1"
+              max="100"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select class="form-control" id="gender" name="gender" required>
+              <option value="">Select Gender</option>
+              <option value="0">Female</option>
+              <option value="1">Male</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
