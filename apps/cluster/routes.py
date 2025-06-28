@@ -9,14 +9,11 @@ from apps import db
 from apps.sale.models import Sale
 from apps.perfume.models import Perfume
 from apps.profession.models import Profession
-from flask import render_template, request, redirect, current_app, url_for, session
+from flask import render_template, request, redirect, current_app, url_for
 from flask_login import login_required
 from jinja2 import TemplateNotFound
-import os
 import numpy as np
-from sklearn.cluster import KMeans
 import pandas as pd
-from sqlalchemy import create_engine
 
 def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     # Fetch sales data with perfume and profession names
@@ -75,7 +72,7 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     db.session.query(Cluster).delete()
     db.session.commit()
 
-    # Create Cluster objects with actual values (not rounded)
+    # Create Cluster objects with ACTUAL mean values (not mode)
     clusters = []
     for cluster_id in range(len(centroid_ids)):
         cluster_members = df_sales[df_sales['cluster'] == cluster_id]
@@ -83,18 +80,18 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
         if cluster_members.empty:
             continue
 
-        # Calculate characteristics
+        # Calculate MEAN for each characteristic (not mode)
         age_mean = cluster_members['age'].mean()
-        perfume_mode = cluster_members['perfume_id'].mode()[0]
-        gender_mode = cluster_members['gender'].mode()[0]
-        profession_mode = cluster_members['profession_id'].mode()[0]
+        perfume_mean = cluster_members['perfume_id'].mean()
+        gender_mean = cluster_members['gender'].mean()
+        profession_mean = cluster_members['profession_id'].mean()
 
         new_cluster = Cluster(
             label=f"Age {round(age_mean)}",
             age=float(age_mean),
-            perfume_id=float(perfume_mode),
-            gender=float(gender_mode),
-            profession_id=float(profession_mode)
+            perfume_id=float(perfume_mean),
+            gender=float(gender_mean),
+            profession_id=float(profession_mean)
         )
         db.session.add(new_cluster)
         clusters.append(new_cluster)
@@ -115,7 +112,6 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
 def index():
 
     return render_template('cluster/index.html')
-
 
 @blueprint.route('/cluster/process', methods=['POST'])
 @login_required
@@ -155,7 +151,7 @@ def cluster_table():
         # Get all clusters
         clusters = Cluster.query.all()
         
-        # Prepare full precision results
+        # Prepare full precision results (actual values from database)
         results = []
         for cluster in clusters:
             results.append({
@@ -166,7 +162,7 @@ def cluster_table():
                 'profession_id': cluster.profession_id
             })
         
-        # Prepare rounded results
+        # Prepare rounded results (for display only)
         results_rounded = []
         for cluster in clusters:
             results_rounded.append({
@@ -177,7 +173,7 @@ def cluster_table():
                 'profession_id': round(cluster.profession_id)
             })
         
-        # Prepare rounded results with names
+        # Prepare rounded results with names (for display only)
         results_rounded_name = []
         for cluster in clusters:
             # Get most common perfume and profession names for this cluster
@@ -217,7 +213,6 @@ def cluster_table():
     except Exception as e:
         current_app.logger.error(f"Cluster table error: {str(e)}")
         return render_template('home/page-500.html'), 500
-
 
 @blueprint.route('/<template>')
 @login_required
