@@ -25,24 +25,48 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     
     # Convert sales data to a DataFrame
     import pandas as pd
+    import numpy as np
     df_sales = pd.DataFrame(sales_data, columns=['id'] + variables)
 
-    # Extract initial centroids from the specified sales IDs
-    initial_centroids = df_sales[df_sales['id'].isin(centroid_ids)][variables].values
+    # Extract initial centroids in the specified order
+    initial_centroids = []
+    for cid in centroid_ids:
+        centroid_data = df_sales[df_sales['id'] == cid][variables]
+        if centroid_data.empty:
+            raise ValueError(f"Centroid ID {cid} not found in sales data.")
+        initial_centroids.append(centroid_data.values[0])
+    centroids = np.array(initial_centroids)
 
-    if len(initial_centroids) != len(centroid_ids):
-        raise ValueError("Some centroid IDs were not found in sales data.")
+    # Prepare feature matrix
+    X = df_sales[variables].values
 
-    # Perform KMeans clustering
-    kmeans = KMeans(n_clusters=len(centroid_ids), init=initial_centroids, n_init=1, max_iter=iterations)
-    df_sales['cluster'] = kmeans.fit_predict(df_sales[variables])
+    # Custom K-Means algorithm
+    for _ in range(iterations):
+        # Calculate |Σ(x_i - c_i)| distances
+        raw_diffs = (X[:, None, :] - centroids[None, :, :]).sum(axis=2)
+        dists = np.abs(raw_diffs)
+        
+        # Assign to nearest cluster (0-indexed)
+        labels = np.argmin(dists, axis=1)
+        df_sales['cluster'] = labels
+        
+        # Update centroids (handle empty clusters)
+        new_centroids = np.zeros_like(centroids)
+        for j in range(len(centroid_ids)):
+            cluster_data = df_sales[df_sales['cluster'] == j]
+            if not cluster_data.empty:
+                new_centroids[j] = cluster_data[variables].mean().values
+            else:
+                new_centroids[j] = centroids[j]  # Keep previous centroid
+        
+        centroids = new_centroids
 
     # Store clusters in the database
-    db.session.query(Result).delete()   # Clear previous result data
-    db.session.query(Cluster).delete()  # Clear previous cluster data
+    db.session.query(Result).delete()
+    db.session.query(Cluster).delete()
     db.session.commit()
 
-    # Save cluster data with all characteristics
+    # Save cluster characteristics
     clusters = []
     for cluster_id in range(len(centroid_ids)):
         cluster_members = df_sales[df_sales['cluster'] == cluster_id]
@@ -50,7 +74,7 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
         if cluster_members.empty:
             continue  # Skip empty clusters
 
-        # Calculate cluster characteristics
+        # Calculate characteristics
         age_mean = cluster_members['age'].mean()
         perfume_mode = cluster_members['perfume_id'].mode()[0]
         gender_mode = cluster_members['gender'].mode()[0]
@@ -63,22 +87,22 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
             gender=float(gender_mode),
             profession_id=float(profession_mode)
         )
-        
         db.session.add(new_cluster)
         clusters.append(new_cluster)
     
     db.session.commit()
 
-    # Save result data
-    for index, row in df_sales.iterrows():
-        sales_id = row['id']
-        cluster_id = row['cluster']
-        new_result = Result(cluster_id=clusters[cluster_id].id, sales_id=sales_id)
+    # Save results
+    for _, row in df_sales.iterrows():
+        new_result = Result(
+            cluster_id=clusters[row['cluster']].id,
+            sales_id=row['id']
+        )
         db.session.add(new_result)
-
-    db.session.commit()
     
+    db.session.commit()
     return True
+
 
 def kmeans_result_table():
 
