@@ -40,4 +40,9 @@ class Sale(db.Model):
     def gender_str(self):
         return 'Female' if self.gender == 0 else 'Male'
     
-    result = db.relationship('Result', backref='sale', lazy=True)
+    results = db.relationship(
+        'Result',
+        backref='sale',
+        lazy=True,
+        cascade='all, delete, delete-orphan'
+    )

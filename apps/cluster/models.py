@@ -31,8 +31,16 @@ class Result(db.Model):
     __tablename__ = 'results'
 
     id = db.Column(db.Integer, primary_key=True)
-    cluster_id = db.Column(db.Integer, db.ForeignKey('clusters.id'), nullable=False)
-    sales_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
+    cluster_id = db.Column(
+        db.Integer,
+        db.ForeignKey('clusters.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    sales_id = db.Column(
+        db.Integer,
+        db.ForeignKey('sales.id', ondelete='CASCADE'),
+        nullable=False
+    )
 
     def __init__(self, cluster_id, sales_id):
         self.cluster_id = cluster_id
