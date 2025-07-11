@@ -1,0 +1,164 @@
+{% extends "layouts/base.html" %} {% block title %} K-Means Iterations {%
+endblock %} {% block stylesheets %}
+<style>
+  .iteration-card {
+    margin-bottom: 2rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .iteration-header {
+    background-color: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .badge-count {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+  }
+  .table th {
+    font-weight: 600;
+  }
+  .cluster-row {
+    transition: background-color 0.2s;
+  }
+  .cluster-row:hover {
+    background-color: #f8f9fa;
+  }
+  .final-iteration {
+    border: 2px solid #4caf50;
+  }
+  .final-header {
+    background-color: #e8f5e9;
+  }
+  .emoji-badge {
+    font-size: 1.2em;
+    padding: 0;
+    background: none;
+    border: none;
+  }
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+</style>
+{% endblock %} {% block content %}
+<!-- [ Main Content ] start -->
+<section class="pcoded-main-container">
+  <div class="pcoded-content">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h1>K-Moons Clustering Progress</h1>
+            <div class="alert alert-warning mt-3">
+              <i class="feather icon-alert-triangle"></i>
+              Showing intermediate results for each iteration. Final results are
+              saved to the database.
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="section-title">Iterations</h2>
+
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              {% for i in range(iteration_count) %}
+              <a href="#iteration-{{ i+1 }}" class="btn btn-outline-primary">
+                Iteration {{ i+1 }}
+              </a>
+              {% endfor %}
+            </div>
+
+            {% for iteration in iterations %}
+            <div id="iteration-{{ loop.index }}" class="iteration-card mb-5">
+              <div class="iteration-header">
+                <h3 class="mb-0">
+                  Iteration {{ loop.index }} {% if loop.index == iteration_count
+                  %}
+                  <span class="badge badge-success">Final</span>
+                  {% endif %}
+                  <span class="badge badge-primary badge-count">
+                    {{ iteration|length }} clusters
+                  </span>
+                </h3>
+              </div>
+
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>CLUSTER</th>
+                        <th>SIZE</th>
+                        <th>AGE (AVG)</th>
+                        <th>GENDER (AVG)</th>
+                        <th>MALE</th>
+                        <th>FEMALE</th>
+                        <th>PERFUME</th>
+                        <th>PROFESSION</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for cluster in iteration %}
+                      <tr class="cluster-row">
+                        <td><strong>{{ cluster.label }}</strong></td>
+                        <td>{{ cluster.size }}</td>
+                        <td>{{ cluster.age }}</td>
+                        <td>{{ cluster.gender }}</td>
+                        <td>{{ cluster.total_male }}</td>
+                        <td>{{ cluster.total_female }}</td>
+                        <td>{{ cluster.perfume_name }}</td>
+                        <td>{{ cluster.profession_name }}</td>
+                      </tr>
+                      {% else %}
+                      <tr>
+                        <td colspan="8" class="text-center text-muted">
+                          No cluster data available for this iteration
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            <div class="mt-5 text-center">
+              <a
+                href="{{ url_for('cluster_blueprint.cluster_table') }}"
+                class="btn btn-primary btn-lg"
+              >
+                <i class="feather icon-eye"></i> View Final Clusters
+              </a>
+              <a href="/" class="btn btn-outline-secondary btn-lg ml-2">
+                <i class="feather icon-home"></i> Return Home
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- [ Main Content ] end -->
+{% endblock %} {% block javascripts %}
+<script>
+  $(document).ready(function () {
+    // Smooth scrolling for iteration links
+    $('a[href^="#iteration-"]').click(function (e) {
+      e.preventDefault();
+      var target = $(this.getAttribute('href'));
+      if (target.length) {
+        $('html, body').animate(
+          {
+            scrollTop: target.offset().top - 20,
+          },
+          500,
+        );
+      }
+    });
+  });
+</script>
+{% endblock %}
