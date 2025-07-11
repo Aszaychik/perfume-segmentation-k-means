@@ -65,6 +65,38 @@ def delete_sale(sale_id):
         return jsonify(error=str(e)), 400
     
 
+@blueprint.route('/api/sales', methods=['GET'])
+@login_required
+def get_sales():
+    search_query = request.args.get('q', '')
+    
+    query = Sale.query.join(Perfume).join(Profession)
+    
+    if search_query:
+        search_query = f"%{search_query}%"
+        query = query.filter(
+            db.or_(
+                Sale.id.like(search_query),
+                Perfume.name.ilike(search_query),
+                Profession.name.ilike(search_query),
+                Sale.age.cast(db.String).like(search_query),
+                Sale.gender.like(search_query)
+            )
+        )
+    else:
+        # Return all records when no search query
+        query = query.order_by(Sale.id.desc()).limit(50)
+    
+    sales = query.all()
+    
+    return jsonify([{
+        'id': sale.id,
+        'perfume': {'name': sale.perfume.name},
+        'profession': {'name': sale.profession.name},
+        'age': sale.age,
+        'gender': 'Female' if sale.gender == 0 else 'Male'
+    } for sale in sales])
+
 @blueprint.route('/<template>')
 @login_required
 def route_template(template):
