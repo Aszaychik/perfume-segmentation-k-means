@@ -29,81 +29,76 @@ def perform_kmeans(iterations, variables, centroid_ids=[5,10,15,20,25]):
     ).join(Profession, Sale.profession_id == Profession.id)
     
     sales_data = query.all()
-    
     if not sales_data:
         raise ValueError("No sales data available for clustering.")
-    
+
     # Convert sales data to DataFrame
     df_sales = pd.DataFrame(sales_data, columns=[
-        'id', 'age', 'gender', 'profession_id', 'perfume_id', 
+        'id', 'age', 'gender', 'profession_id', 'perfume_id',
         'perfume_name', 'profession_name'
     ])
 
-    # Extract initial centroids in specified order
-    initial_centroids = []
-    for cid in centroid_ids:
-        centroid_data = df_sales[df_sales['id'] == cid][variables]
-        if centroid_data.empty:
-            raise ValueError(f"Centroid ID {cid} not found in sales data.")
-        initial_centroids.append(centroid_data.values[0])
-    centroids = np.array(initial_centroids)
-
     # Prepare feature matrix
     X = df_sales[variables].values
+    k = len(centroid_ids)
 
-    # Custom K-Means algorithm
+    # Initialize centroids based on specified IDs (1-based labels)
+    centroids = (
+        df_sales.set_index('id')
+                .loc[centroid_ids, variables]
+                .to_numpy()
+    )
+
+    # Run iterations of custom K-Means
     for _ in range(iterations):
+        # Compute distances using absolute-sum (as in notebook)
         raw_diffs = (X[:, None, :] - centroids[None, :, :]).sum(axis=2)
         dists = np.abs(raw_diffs)
-        labels = np.argmin(dists, axis=1)
+        # Assign clusters (1-based labels)
+        labels = np.argmin(dists, axis=1) + 1
         df_sales['cluster'] = labels
-        
-        new_centroids = np.zeros_like(centroids)
-        for j in range(len(centroid_ids)):
-            cluster_data = df_sales[df_sales['cluster'] == j]
-            if not cluster_data.empty:
-                new_centroids[j] = cluster_data[variables].mean().values
-            else:
-                new_centroids[j] = centroids[j]
-        centroids = new_centroids
 
-    # Store clusters in the database
+        # Update centroids by mean of assigned points, reindex to maintain order 1..k
+        df_means = (
+            df_sales.groupby('cluster')[variables]
+                    .mean()
+                    .reindex(range(1, k+1))
+        )
+        # Replace missing means with previous centroids
+        updated = np.where(np.isnan(df_means.values), centroids, df_means.values)
+        centroids = updated
+
+    # Clear previous results and clusters
     db.session.query(Result).delete()
     db.session.query(Cluster).delete()
     db.session.commit()
 
-    # Create Cluster objects with ACTUAL mean values (not mode)
+    # Persist new clusters and results
     clusters = []
-    for cluster_id in range(len(centroid_ids)):
-        cluster_members = df_sales[df_sales['cluster'] == cluster_id]
-        
-        if cluster_members.empty:
+    for label in range(1, k+1):
+        members = df_sales[df_sales['cluster'] == label]
+        if members.empty:
             continue
-
-        # Calculate MEAN for each characteristic (not mode)
-        age_mean = cluster_members['age'].mean()
-        perfume_mean = cluster_members['perfume_id'].mean()
-        gender_mean = cluster_members['gender'].mean()
-        profession_mean = cluster_members['profession_id'].mean()
-
-        new_cluster = Cluster(
-            label=f"Age {round(age_mean)}",
-            age=float(age_mean),
-            perfume_id=float(perfume_mean),
-            gender=float(gender_mean),
-            profession_id=float(profession_mean)
+        # Compute actual means (float)
+        means = members[variables].mean()
+        cluster_obj = Cluster(
+            label=f"Cluster {label}",
+            age=float(means['age']),
+            perfume_id=float(means['perfume_id']),
+            gender=float(means['gender']),
+            profession_id=float(means['profession_id'])
         )
-        db.session.add(new_cluster)
-        clusters.append(new_cluster)
-    
+        db.session.add(cluster_obj)
+        clusters.append(cluster_obj)
     db.session.commit()
 
-    # Save results
+    # Save results linking sales to cluster IDs
     for _, row in df_sales.iterrows():
-        cluster_id = clusters[row['cluster']].id
-        new_result = Result(cluster_id=cluster_id, sales_id=row['id'])
-        db.session.add(new_result)
-    
+        # Find matching cluster object by label suffix
+        target = next((c for c in clusters if c.label.endswith(str(row['cluster']))), None)
+        if target:
+            result = Result(cluster_id=target.id, sales_id=row['id'])
+            db.session.add(result)
     db.session.commit()
     return True
 
@@ -162,15 +157,15 @@ def cluster_table():
                 'profession_id': cluster.profession_id
             })
         
-        # Prepare rounded results (for display only)
+        # Prepare rounded results (using np.floor(x + 0.5) for "round half up")
         results_rounded = []
         for cluster in clusters:
             results_rounded.append({
                 'cluster': cluster.id,
-                'age': round(cluster.age),
-                'perfume_id': round(cluster.perfume_id),
-                'gender': round(cluster.gender),
-                'profession_id': round(cluster.profession_id)
+                'age': int(np.floor(cluster.age + 0.5)),
+                'perfume_id': int(np.floor(cluster.perfume_id + 0.5)),
+                'gender': int(np.floor(cluster.gender + 0.5)),
+                'profession_id': int(np.floor(cluster.profession_id + 0.5))
             })
         
         # Prepare rounded results with names (for display only)
@@ -197,10 +192,10 @@ def cluster_table():
             
             results_rounded_name.append({
                 'cluster': cluster.id,
-                'age': round(cluster.age),
-                'perfume_id': round(cluster.perfume_id),
-                'gender': round(cluster.gender),
-                'profession_id': round(cluster.profession_id),
+                'age': int(np.floor(cluster.age + 0.5)),
+                'perfume_id': int(np.floor(cluster.perfume_id + 0.5)),
+                'gender': int(np.floor(cluster.gender + 0.5)),
+                'profession_id': int(np.floor(cluster.profession_id + 0.5)),
                 'perfume_name': perfume_name[0] if perfume_name else "N/A",
                 'profession_name': profession_name[0] if profession_name else "N/A"
             })
