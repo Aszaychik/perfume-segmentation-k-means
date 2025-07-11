@@ -114,6 +114,7 @@ def process_cluster():
     try:
         iterations = int(request.form.get('cluster_count'))
         variables = request.form.getlist('variables')
+        centroid_ids = [int(id) for id in request.form.getlist('centroid_ids')]
 
         # Enforce required variables
         required_vars = {'perfume_id', 'age', 'gender', 'profession_id'}
@@ -128,7 +129,13 @@ def process_cluster():
         if iterations < 1 or iterations > 100:
             raise ValueError("Iterations must be between 1-100")
         
-        success = perform_kmeans(iterations, variables)
+        # Validate centroid IDs
+        if not centroid_ids:
+            centroid_ids = [5,10,15,20,25]
+        elif len(centroid_ids) < 2:
+            raise ValueError("Please select at least 2 centroids")
+        
+        success = perform_kmeans(iterations, variables, centroid_ids)  # Updated
         
         if success:
             return redirect(url_for('cluster_blueprint.cluster_table'))
